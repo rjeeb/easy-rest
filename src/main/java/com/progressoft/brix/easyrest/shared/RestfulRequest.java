@@ -68,8 +68,6 @@ public interface RestfulRequest {
 
     void sendJson(String json);
 
-    void sendJson(Object object);
-
     void send();
 
     RestfulRequest onSuccess(SuccessHandler successHandler);

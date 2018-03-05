@@ -19,11 +19,6 @@ public class JavaRestfulRequest extends BaseRestfulRequest {
     }
 
     @Override
-    public void sendJson(Object object) {
-
-    }
-
-    @Override
     public void send() {
 
     }

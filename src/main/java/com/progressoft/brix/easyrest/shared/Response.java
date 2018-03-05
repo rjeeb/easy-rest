@@ -15,6 +15,4 @@ public interface Response {
     String getStatusText();
 
     String getBodyAsString();
-
-    <T> T getBodyAsJson(Class<T> type);
 }

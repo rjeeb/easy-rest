@@ -1,9 +1,6 @@
 package com.progressoft.brix.easyrest.shared;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.joining;
@@ -19,8 +16,8 @@ public abstract class BaseRestfulRequest implements RestfulRequest {
     private Map<String, List<String>> params = new LinkedHashMap<>();
     private Map<String, String> headers = new LinkedHashMap<>();
     private int timeout;
-    private SuccessHandler successHandler;
-    private ErrorHandler errorHandler;
+    protected SuccessHandler successHandler;
+    protected ErrorHandler errorHandler;
 
     public BaseRestfulRequest(String uri, String method) {
         if (isNull(uri) || uri.trim().isEmpty())
@@ -76,7 +73,7 @@ public abstract class BaseRestfulRequest implements RestfulRequest {
         if (isNull(value))
             return this;
         if (!params.containsKey(key))
-            params.put(key, new LinkedList<>());
+            params.put(key, new ArrayList<>());
         params.get(key).add(value);
         return this;
     }
