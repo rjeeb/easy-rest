@@ -3,22 +3,18 @@ package com.progressoft.brix.easyrest.shared;
 import com.google.gwt.junit.client.GWTTestCase;
 
 import java.util.Arrays;
+import java.util.logging.Logger;
 
-public class RestfulRequestTest extends GWTTestCase {
+public abstract class RestfulRequestTest extends GWTTestCase {
 
-    private static final String URI = "http://localhost:8080";
+    protected static final Logger LOGGER = Logger.getLogger(RestfulRequestTest.class.getCanonicalName());
     private static final String GET = "GET";
 
     private RestfulRequest restfulRequest;
 
     @Override
-    public String getModuleName() {
-        return null;
-    }
-
-    @Override
     protected void gwtSetUp() {
-        restfulRequest = RestfulRequest.get(URI);
+        restfulRequest = RestfulRequest.get(getUri());
     }
 
     private RestfulRequest create(String uri) {
@@ -44,64 +40,64 @@ public class RestfulRequestTest extends GWTTestCase {
     }
 
     public void testValidUri() {
-        assertEquals(URI, restfulRequest.getUri());
+        assertEquals(getUri(), restfulRequest.getUri());
     }
 
     public void testAddQueryParameter() {
         restfulRequest.addQueryParam("key", "value");
-        assertEquals(URI + "?key=value", restfulRequest.getUri());
+        assertEquals(getUri() + "?key=value", restfulRequest.getUri());
     }
 
     public void testAddMultipleQueryParameter() {
         restfulRequest.addQueryParam("key1", "value1");
         restfulRequest.addQueryParam("key2", "value2");
 
-        assertEquals(URI + "?key1=value1&key2=value2", restfulRequest.getUri());
+        assertEquals(getUri() + "?key1=value1&key2=value2", restfulRequest.getUri());
     }
 
     public void testAddQueryParameters() {
         restfulRequest.addQueryParams("key", Arrays.asList("value1", "value2"));
-        assertEquals(URI + "?key=value1&key=value2", restfulRequest.getUri());
+        assertEquals(getUri() + "?key=value1&key=value2", restfulRequest.getUri());
     }
 
     public void testAddParameterWithNullValue() {
         restfulRequest.addQueryParam("key", null);
-        assertEquals(URI, restfulRequest.getUri());
+        assertEquals(getUri(), restfulRequest.getUri());
     }
 
     public void testSetQueryParamater() {
         restfulRequest.addQueryParam("key", "value1");
         restfulRequest.setQueryParam("key", "value2");
-        assertEquals(URI + "?key=value2", restfulRequest.getUri());
+        assertEquals(getUri() + "?key=value2", restfulRequest.getUri());
     }
 
     public void testCreateWithUriThatHasParam_shouldParseParameters() {
-        assertEquals("key1=value1&key2=value2", create(URI + "?key1=value1&key2=value2").getQuery());
+        assertEquals("key1=value1&key2=value2", create(getUri() + "?key1=value1&key2=value2").getQuery());
     }
 
     public void testGetPath() {
-        assertEquals(URI, create(URI + "?key1=value1&key2=value2").getPath());
+        assertEquals(getUri(), create(getUri() + "?key1=value1&key2=value2").getPath());
     }
 
     public void testGetPathEndsWithSlash_slashShouldBeTrimmed() {
-        assertEquals(URI, create(URI + "/").getPath());
+        assertEquals(getUri(), create(getUri() + "/").getPath());
     }
 
     public void testCreateRequestWithUriAndQueryParam() {
-        RestfulRequest baseRestfulRequest = create(URI).addQueryString("key1=value1&key2=value2");
-        assertEquals(URI, baseRestfulRequest.getPath());
+        RestfulRequest baseRestfulRequest = create(getUri()).addQueryString("key1=value1&key2=value2");
+        assertEquals(getUri(), baseRestfulRequest.getPath());
         assertEquals("key1=value1&key2=value2", baseRestfulRequest.getQuery());
     }
 
     public void testCreateWithInvalidMethod_shouldThrowException() {
         try {
-            create(URI, null);
+            create(getUri(), null);
             fail("Method must be null");
         } catch (IllegalArgumentException e) {
         }
 
         try {
-            create(URI, "   ");
+            create(getUri(), "   ");
             fail("Method must be empty");
         } catch (IllegalArgumentException e) {
         }
@@ -122,4 +118,29 @@ public class RestfulRequestTest extends GWTTestCase {
         restfulRequest.timeout(-2);
         assertEquals(0, restfulRequest.getTimeout());
     }
+
+    public void testSendWithNoBody() {
+        RestfulRequest test_content = RestfulRequest.get(getUri()).onSuccess(response -> {
+            assertEquals("test content", response.getBodyAsString());
+            finish();
+        }).onError(throwable -> fail());
+        test_content.send();
+        wait(500);
+    }
+
+    protected abstract String getUri();
+
+    /**
+     * Put the current test in asynchronous mode. If the test method completes
+     * normally, this test will not immediately succeed. Instead, a <i>delay
+     * period</i> begins. During the delay period, if the {@link #finish()} method
+     * is called before the delay period expires,
+     * the test will succeed, otherwise the test will fail</li>
+     * <p>
+     * This method is typically used to test event driven functionality.
+     * </p>
+     */
+    protected abstract void wait(int millis);
+
+    protected abstract void finish();
 }

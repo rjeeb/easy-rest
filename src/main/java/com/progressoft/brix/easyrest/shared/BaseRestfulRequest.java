@@ -37,11 +37,12 @@ public abstract class BaseRestfulRequest implements RestfulRequest {
     @Override
     public BaseRestfulRequest addQueryString(String queryString) {
         String[] params = queryString.split(AND);
-        for (String param : params) {
-            String[] paramValuePair = param.split(EQUALS);
-            addQueryParam(paramValuePair[0], paramValuePair[1]);
-        }
+        Arrays.stream(params).map(param -> param.split(EQUALS)).forEach(this::addQueryPair);
         return this;
+    }
+
+    private void addQueryPair(String[] paramNameValuePair) {
+        addQueryParam(paramNameValuePair[0], paramNameValuePair[1]);
     }
 
     private void setUri(String uri) {
