@@ -3,6 +3,7 @@
 <module>
     <inherits name="com.progressoft.brix.easyrest.EasyRest"/>
     <source path="client"/>
+    <source path="shared"/>
     <servlet path='/testRequest'
              class='com.progressoft.brix.easyrest.server.TestServlet'/>
 </module>

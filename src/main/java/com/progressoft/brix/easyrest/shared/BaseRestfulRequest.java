@@ -1,43 +1,31 @@
 package com.progressoft.brix.easyrest.shared;
 
-import java.util.*;
+import java.util.Arrays;
 
 import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.joining;
 
 public abstract class BaseRestfulRequest implements RestfulRequest {
 
-    private static final String AND = "&";
-    private static final String EQUALS = "=";
-    private static final String QUESTION_MARK = "?";
-
     private String uri;
     private String method;
-    private Map<String, List<String>> params = new LinkedHashMap<>();
-    private Map<String, String> headers = new LinkedHashMap<>();
-    private int timeout;
     protected SuccessHandler successHandler;
     protected ErrorHandler errorHandler;
+    private int timeout;
 
     public BaseRestfulRequest(String uri, String method) {
         if (isNull(uri) || uri.trim().isEmpty())
-            throw new IllegalArgumentException("Invalid URI");
+            throw new IllegalArgumentException("Invalid URI [" + uri + "]");
         if (isNull(method) || method.trim().isEmpty())
-            throw new IllegalArgumentException("Invalid http method");
-        if (uri.contains(QUESTION_MARK)) {
-            String[] uriParts = uri.split("\\?");
-            addQueryString(uriParts[1]);
-            setUri(uriParts[0]);
-        } else
-            setUri(uri);
+            throw new IllegalArgumentException("Invalid http method [" + method + "]");
 
+        this.uri = uri;
         this.method = method;
     }
 
     @Override
     public BaseRestfulRequest addQueryString(String queryString) {
-        String[] params = queryString.split(AND);
-        Arrays.stream(params).map(param -> param.split(EQUALS)).forEach(this::addQueryPair);
+        String[] params = queryString.split("&");
+        Arrays.stream(params).map(param -> param.split("=")).forEach(this::addQueryPair);
         return this;
     }
 
@@ -45,38 +33,10 @@ public abstract class BaseRestfulRequest implements RestfulRequest {
         addQueryParam(paramNameValuePair[0], paramNameValuePair[1]);
     }
 
-    private void setUri(String uri) {
-        this.uri = uri.endsWith("/") ? uri.substring(0, uri.length() - 1) : uri;
-    }
-
     @Override
     public String getUri() {
         String queryParams = paramsAsString();
-        return uri + (queryParams.isEmpty() ? queryParams : QUESTION_MARK + queryParams);
-    }
-
-    private String paramsAsString() {
-        if (params.isEmpty())
-            return "";
-        return params.entrySet().stream()
-                .map(this::entryAsString)
-                .collect(joining(AND));
-    }
-
-    private String entryAsString(Map.Entry<String, List<String>> entry) {
-        return entry.getValue().stream()
-                .map(value -> entry.getKey() + EQUALS + value)
-                .collect(joining(AND));
-    }
-
-    @Override
-    public BaseRestfulRequest addQueryParam(String key, String value) {
-        if (isNull(value))
-            return this;
-        if (!params.containsKey(key))
-            params.put(key, new ArrayList<>());
-        params.get(key).add(value);
-        return this;
+        return getPath() + (queryParams.isEmpty() ? queryParams : "?" + queryParams);
     }
 
     @Override
@@ -87,20 +47,17 @@ public abstract class BaseRestfulRequest implements RestfulRequest {
     }
 
     @Override
-    public BaseRestfulRequest setQueryParam(String key, String value) {
-        params.put(key, new LinkedList<>());
-        addQueryParam(key, value);
-        return this;
-    }
-
-    @Override
     public String getQuery() {
         return paramsAsString();
     }
 
     @Override
     public String getPath() {
-        return this.uri;
+        String path = uri;
+        if (path.contains("?"))
+            path = path.substring(0, path.indexOf("?"));
+
+        return path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
     }
 
     @Override
@@ -109,21 +66,8 @@ public abstract class BaseRestfulRequest implements RestfulRequest {
     }
 
     @Override
-    public BaseRestfulRequest putHeader(String key, String value) {
-        headers.put(key, value);
-        return this;
-    }
-
-    @Override
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
-
-    @Override
-    public BaseRestfulRequest timeout(int timeout) {
-        if (timeout < 0)
-            timeout = 0;
-        this.timeout = timeout;
+    public RestfulRequest timeout(int timeout) {
+        this.timeout = timeout < 0 ? 0 : timeout;
         return this;
     }
 
@@ -143,4 +87,6 @@ public abstract class BaseRestfulRequest implements RestfulRequest {
         this.errorHandler = errorHandler;
         return this;
     }
+
+    protected abstract String paramsAsString();
 }

@@ -64,9 +64,11 @@ public interface RestfulRequest {
 
     int getTimeout();
 
-    void sendForm(String encodedFormData);
+    void sendForm(Map<String, String> formData);
 
     void sendJson(String json);
+
+    void send(String data);
 
     void send();
 

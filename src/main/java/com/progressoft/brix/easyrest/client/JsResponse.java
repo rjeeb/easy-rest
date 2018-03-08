@@ -11,7 +11,7 @@ public class JsResponse implements Response {
 
     private final XMLHttpRequest request;
 
-    public JsResponse(XMLHttpRequest request) {
+    JsResponse(XMLHttpRequest request) {
         this.request = request;
     }
 

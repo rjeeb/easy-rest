@@ -1,6 +1,7 @@
-package com.progressoft.brix.easyrest.shared;
+package com.progressoft.brix.easyrest.server;
 
-import com.progressoft.brix.easyrest.server.TestServlet;
+import com.progressoft.brix.easyrest.shared.RestfulRequestTest;
+import io.vertx.core.json.Json;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.LocalConnector;
 import org.eclipse.jetty.server.Server;
@@ -50,7 +51,7 @@ public class JavaRestfulRequestTest extends RestfulRequestTest {
     @Override
     protected void wait(int millis) {
         try {
-            Thread.sleep(1000);
+            Thread.sleep(millis);
             if (!finished)
                 fail();
         } catch (InterruptedException e) {
@@ -61,5 +62,19 @@ public class JavaRestfulRequestTest extends RestfulRequestTest {
     @Override
     protected void finish() {
         this.finished = true;
+    }
+
+    @Override
+    protected String json() {
+        return Json.encode(new Message());
+    }
+
+    @Override
+    protected String expectedJson() {
+        return "\"{\\\"message\\\":\\\"test message\\\"}\"";
+    }
+
+    public class Message {
+        public String message = "test message";
     }
 }

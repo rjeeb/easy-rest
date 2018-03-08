@@ -27,6 +27,10 @@ dependencies {
     compile 'com.google.gwt:gwt-dev:2.8.2'
 }
 
+test {
+    systemProperty("gwt.args", "-runStyle ${project.findProperty('test.gwt.runStyle') ?: 'HtmlUnit:Chrome'}")
+}
+
 putnami {
     module 'com.progressoft.brix.easyrest.EasyRest'
     gwtVersion = '2.8.2'

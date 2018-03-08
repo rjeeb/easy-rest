@@ -1,14 +1,19 @@
 package com.progressoft.brix.easyrest.shared;
 
+import com.google.gwt.junit.DoNotRunWith;
+import com.google.gwt.junit.Platform;
 import com.google.gwt.junit.client.GWTTestCase;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public abstract class RestfulRequestTest extends GWTTestCase {
 
     protected static final Logger LOGGER = Logger.getLogger(RestfulRequestTest.class.getCanonicalName());
     private static final String GET = "GET";
+    public static final String REQUEST_QUERY_STRING = "request-query-string";
 
     private RestfulRequest restfulRequest;
 
@@ -43,32 +48,20 @@ public abstract class RestfulRequestTest extends GWTTestCase {
         assertEquals(getUri(), restfulRequest.getUri());
     }
 
-    public void testAddQueryParameter() {
-        restfulRequest.addQueryParam("key", "value");
-        assertEquals(getUri() + "?key=value", restfulRequest.getUri());
-    }
-
-    public void testAddMultipleQueryParameter() {
-        restfulRequest.addQueryParam("key1", "value1");
-        restfulRequest.addQueryParam("key2", "value2");
-
-        assertEquals(getUri() + "?key1=value1&key2=value2", restfulRequest.getUri());
-    }
-
-    public void testAddQueryParameters() {
-        restfulRequest.addQueryParams("key", Arrays.asList("value1", "value2"));
-        assertEquals(getUri() + "?key=value1&key=value2", restfulRequest.getUri());
-    }
-
     public void testAddParameterWithNullValue() {
         restfulRequest.addQueryParam("key", null);
-        assertEquals(getUri(), restfulRequest.getUri());
+        assertEquals(getUri() + "?key=null", restfulRequest.getUri());
     }
 
     public void testSetQueryParamater() {
         restfulRequest.addQueryParam("key", "value1");
         restfulRequest.setQueryParam("key", "value2");
         assertEquals(getUri() + "?key=value2", restfulRequest.getUri());
+    }
+
+    public void testGetUriWithParameters() {
+        RestfulRequest restfulRequest = create(getUri() + "?key1=value1").addQueryParam("key2", "value2");
+        assertEquals(getUri() + "?key1=value1&key2=value2", restfulRequest.getUri());
     }
 
     public void testCreateWithUriThatHasParam_shouldParseParameters() {
@@ -105,27 +98,94 @@ public abstract class RestfulRequestTest extends GWTTestCase {
 
     public void testPutHeader() {
         restfulRequest.putHeader("key", "value");
-        assertEquals(1, restfulRequest.getHeaders().size());
         assertEquals("value", restfulRequest.getHeaders().get("key"));
     }
 
-    public void testSetTimeoutWithPositiveValue() {
-        restfulRequest.timeout(5);
-        assertEquals(5, restfulRequest.getTimeout());
-    }
-
-    public void testSetTimeoutWithNegativeValue() {
-        restfulRequest.timeout(-2);
-        assertEquals(0, restfulRequest.getTimeout());
-    }
-
     public void testSendWithNoBody() {
-        RestfulRequest test_content = RestfulRequest.get(getUri()).onSuccess(response -> {
+        RestfulRequest.get(getUri()).onSuccess(response -> {
             assertEquals("test content", response.getBodyAsString());
             finish();
-        }).onError(throwable -> fail());
-        test_content.send();
-        wait(500);
+        }).onError(throwable -> fail()).send();
+        wait(200);
+    }
+
+    public void testSendJson() {
+        RestfulRequest jsonRequest = RestfulRequest.post(getUri());
+        jsonRequest.onSuccess(response -> {
+            assertEquals("test content with body [" + expectedJson() + "]", response.getBodyAsString());
+            assertEquals("application/json", response.getHeader("request-header-Content-Type"));
+            finish();
+        }).onError(throwable -> fail()).sendJson(json());
+        wait(200);
+    }
+
+    public void testSendForm() {
+        Map<String, String> formData = new HashMap<>();
+        formData.put("key", "value");
+        RestfulRequest formRequest = RestfulRequest.post(getUri());
+        formRequest.onSuccess(response -> {
+            assertEquals("test content with body [key=value]", response.getBodyAsString());
+            assertEquals("application/x-www-form-urlencoded", response.getHeader("request-header-Content-Type"));
+            finish();
+        }).onError(throwable -> fail()).sendForm(formData);
+        wait(200);
+    }
+
+    public void testSendString() {
+        RestfulRequest formRequest = RestfulRequest.post(getUri());
+        formRequest.onSuccess(response -> {
+            assertEquals("test content with body [string value]", response.getBodyAsString());
+            finish();
+        }).onError(throwable -> fail()).send("string value");
+        wait(200);
+    }
+
+    public void testSendWithQueryParameters() {
+        restfulRequest.addQueryParam("key", "value").onSuccess(response -> {
+            assertEquals("key=value", response.getHeader(REQUEST_QUERY_STRING));
+            finish();
+        }).onError(throwable -> fail()).send();
+        wait(200);
+    }
+
+    public void testAddMultipleQueryParameter() {
+        restfulRequest.addQueryParam("key1", "value1").addQueryParam("key2", "value2").onSuccess(response -> {
+            assertEquals("key1=value1&key2=value2", response.getHeader(REQUEST_QUERY_STRING));
+            finish();
+        }).onError(throwable -> fail()).send();
+        wait(200);
+    }
+
+    public void testAddQueryParameters() {
+        restfulRequest.addQueryParams("key", Arrays.asList("value1", "value2")).onSuccess(response -> {
+            assertEquals("key=value1&key=value2", response.getHeader(REQUEST_QUERY_STRING));
+            finish();
+        }).onError(throwable -> fail()).send();
+        wait(200);
+    }
+
+    @DoNotRunWith(Platform.HtmlUnitBug)
+    public void testRequestTimeout() {
+        restfulRequest.addQueryParam("timeout", "1000").timeout(500).onSuccess(response -> {
+            fail("request should be timed out");
+        }).onError(throwable -> finish()).send();
+        wait(1000);
+    }
+
+    @DoNotRunWith(Platform.HtmlUnitBug)
+    public void testRequestNotTimeout() {
+        restfulRequest.addQueryParam("timeout", "100").timeout(500).onSuccess(response -> {
+            finish();
+        }).onError(throwable -> fail("Request should not be timed out")).send();
+        wait(1000);
+    }
+
+    @DoNotRunWith(Platform.HtmlUnitBug)
+    public void testNegativeRequestTimeout() {
+        restfulRequest.addQueryParam("timeout", "100").timeout(-100).onSuccess(response -> {
+            finish();
+        }).onError(throwable -> fail("Request should not be timed out")).send();
+        wait(1000);
     }
 
     protected abstract String getUri();
@@ -143,4 +203,8 @@ public abstract class RestfulRequestTest extends GWTTestCase {
     protected abstract void wait(int millis);
 
     protected abstract void finish();
+
+    protected abstract String json();
+
+    protected abstract String expectedJson();
 }

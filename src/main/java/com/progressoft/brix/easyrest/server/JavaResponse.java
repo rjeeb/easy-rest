@@ -13,7 +13,7 @@ public class JavaResponse implements Response {
 
     private final HttpResponse<Buffer> response;
 
-    public JavaResponse(HttpResponse<Buffer> response) {
+    JavaResponse(HttpResponse<Buffer> response) {
         this.response = response;
     }
 

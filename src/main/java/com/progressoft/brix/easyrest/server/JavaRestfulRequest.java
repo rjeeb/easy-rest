@@ -1,11 +1,20 @@
 package com.progressoft.brix.easyrest.server;
 
 import com.progressoft.brix.easyrest.shared.BaseRestfulRequest;
+import com.progressoft.brix.easyrest.shared.RestfulRequest;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.joining;
 
 public class JavaRestfulRequest extends BaseRestfulRequest {
 
@@ -16,26 +25,73 @@ public class JavaRestfulRequest extends BaseRestfulRequest {
         WEB_CLIENT = WebClient.create(Vertx.vertx());
     }
 
+    private int timeout;
+
     public JavaRestfulRequest(String uri, String method) {
         super(uri, method);
         request = WEB_CLIENT.requestAbs(HttpMethod.valueOf(method), uri);
     }
 
     @Override
-    public void sendForm(String encodedFormData) {
+    protected String paramsAsString() {
+        return request.queryParams()
+                .entries().stream().map(e -> e.getKey() + "=" + e.getValue())
+                .collect(joining("&"));
+    }
+
+    @Override
+    public JavaRestfulRequest addQueryParam(String key, String value) {
+        request.addQueryParam(key, value);
+        return this;
+    }
+
+    @Override
+    public JavaRestfulRequest setQueryParam(String key, String value) {
+        request.setQueryParam(key, value);
+        return this;
+    }
+
+    @Override
+    public JavaRestfulRequest putHeader(String key, String value) {
+        request.putHeader(key, value);
+        return this;
+    }
+
+    @Override
+    public Map<String, String> getHeaders() {
+        return request.headers().entries().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+    @Override
+    public RestfulRequest timeout(int timeout) {
+        request.timeout(timeout);
+        return super.timeout(timeout);
+    }
+
+    @Override
+    public void sendForm(Map<String, String> formData) {
+        request.sendForm(MultiMap.caseInsensitiveMultiMap().addAll(formData), this::handleResponse);
     }
 
     @Override
     public void sendJson(String json) {
+        request.sendJson(json, this::handleResponse);
+    }
+
+    @Override
+    public void send(String data) {
+        request.sendBuffer(Buffer.buffer(data), this::handleResponse);
     }
 
     @Override
     public void send() {
-        request.send(event -> {
-            if (event.succeeded())
-                successHandler.onResponseReceived(new JavaResponse(event.result()));
-            else
-                errorHandler.onError(event.cause());
-        });
+        request.send(this::handleResponse);
+    }
+
+    private void handleResponse(AsyncResult<HttpResponse<Buffer>> event) {
+        if (event.succeeded())
+            successHandler.onResponseReceived(new JavaResponse(event.result()));
+        else
+            errorHandler.onError(event.cause());
     }
 }
