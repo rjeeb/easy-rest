@@ -8,8 +8,6 @@ public interface Response {
 
     Map<String, String> getHeaders();
 
-    String getHeadersAsString();
-
     int getStatusCode();
 
     String getStatusText();

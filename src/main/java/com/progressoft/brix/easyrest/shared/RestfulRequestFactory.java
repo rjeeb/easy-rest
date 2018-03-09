@@ -25,4 +25,8 @@ class RestfulRequestFactory {
     RestfulRequest head(String uri) {
         throw new UnsupportedOperationException();
     }
+
+    RestfulRequest options(String uri) {
+        throw new UnsupportedOperationException();
+    }
 }

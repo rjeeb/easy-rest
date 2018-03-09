@@ -28,12 +28,6 @@ public class JavaResponse implements Response {
     }
 
     @Override
-    public String getHeadersAsString() {
-        return getHeaders().entrySet().stream().map(o -> o.getKey() + "=" + o.getValue())
-                .collect(joining("\n"));
-    }
-
-    @Override
     public int getStatusCode() {
         return response.statusCode();
     }

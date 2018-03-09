@@ -33,4 +33,9 @@ class JsRestfulRequestFactory extends RestfulRequestFactory {
     RestfulRequest put(String uri) {
         return request(uri, RestfulRequest.PUT);
     }
+
+    @Override
+    RestfulRequest options(String uri) {
+        return request(uri, RestfulRequest.OPTIONS);
+    }
 }

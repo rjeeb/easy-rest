@@ -11,6 +11,7 @@ public interface RestfulRequest {
     String PUT = "PUT";
     String DELETE = "DELETE";
     String HEAD = "HEAD";
+    String OPTIONS = "OPTIONS";
 
     static RestfulRequestFactory factory() {
         return GWT.isClient() ? new JsRestfulRequestFactory() : new JavaRestfulRequestFactory();
@@ -39,6 +40,11 @@ public interface RestfulRequest {
     static RestfulRequest head(String uri) {
         return factory().head(uri);
     }
+
+    static RestfulRequest options(String uri) {
+        return factory().options(uri);
+    }
+
 
     RestfulRequest addQueryString(String queryString);
 

@@ -30,11 +30,6 @@ public class JsResponse implements Response {
     }
 
     @Override
-    public String getHeadersAsString() {
-        return request.getAllResponseHeaders();
-    }
-
-    @Override
     public int getStatusCode() {
         return request.getStatus();
     }

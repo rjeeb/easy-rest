@@ -25,8 +25,6 @@ public class JavaRestfulRequest extends BaseRestfulRequest {
         WEB_CLIENT = WebClient.create(Vertx.vertx());
     }
 
-    private int timeout;
-
     public JavaRestfulRequest(String uri, String method) {
         super(uri, method);
         request = WEB_CLIENT.requestAbs(HttpMethod.valueOf(method), uri);
